@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ApexTrader - Pro Gold Trading Dashboard</title>
+  <style>
+    /* Reset & Theme Variables */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    :root {
+      --bg-dark: #0e1117;
+      --bg-card: #161b22;
+      --bg-hover: #21262d;
+      --border: #30363d;
+      --text-main: #f0f6fc;
+      --text-muted: #8b949e;
+      --accent-gold: #f1c40f;
+      --green: #2ea043;
+      --red: #da3633;
+      --blue: #2f81f7;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Layout */
+    .sidebar {
+      width: 240px;
+      background-color: var(--bg-card);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+    }
+
+    .brand {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: var(--accent-gold);
+      margin-bottom: 30px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .nav-item button {
+      width: 100%;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      padding: 12px;
+      text-align: left;
+      font-size: 0.95rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .nav-item button:hover, .nav-item button.active {
+      background-color: var(--bg-hover);
+      color: var(--text-main);
+    }
+
+    .main-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      height: 60px;
+      background-color: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 30px;
+    }
+
+    .balance-badge {
+      background-color: rgba(241, 196, 15, 0.1);
+      border: 1px solid var(--accent-gold);
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-weight: bold;
+      color: var(--accent-gold);
+    }
+
+    .content-area {
+      padding: 30px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .view-panel {
+      display: none;
+    }
+
+    .view-panel.active {
+      display: block;
+    }
+
+    /* Cards & Components */
+    .card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--text-main);
+    }
+
+    /* Trading View Simulation */
+    .chart-container {
+      height: 350px;
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: flex-end;
+      padding: 20px;
+      gap: 8px;
+    }
+
+    .candle {
+      flex: 1;
+      background-color: var(--green);
+      border-radius: 2px;
+      position: relative;
+      transition: height 0.3s;
+    }
+
+    .candle.red {
+      background-color: var(--red);
+    }
+
+    /* Deposit Flow */
+    .deposit-box {
+      max-width: 500px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      background-color: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-main);
+      font-size: 1rem;
+    }
+
+    .btn {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-gold {
+      background-color: var(--accent-gold);
+      color: #000;
+    }
+
+    .btn-gold:hover {
+      background-color: #d4ac0d;
+    }
+
+    .btn-success {
+      background-color: var(--green);
+      color: #fff;
+    }
+
+    .btn-danger {
+      background-color: var(--red);
+      color: #fff;
+    }
+
+    .payment-details {
+      display: none;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .qr-container {
+      display: flex;
+      justify-content: center;
+      margin: 15px 0;
+      padding: 15px;
+      background-color: #ffffff;
+      border-radius: 8px;
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .qr-container img {
+      display: block;
+      width: 160px;
+      height: 160px;
+    }
+
+    .address-box {
+      display: flex;
+      gap: 10px;
+      margin: 12px 0;
+    }
+
+    .address-input {
+      flex: 1;
+      padding: 10px;
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-main);
+      font-family: monospace;
+      font-size: 0.85rem;
+    }
+
+    /* Tables */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+
+    th {
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .status-badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+
+    .status-pending {
+      background-color: rgba(241, 196, 15, 0.2);
+      color: var(--accent-gold);
+    }
+
+    .status-approved {
+      background-color: rgba(46, 160, 67, 0.2);
+      color: var(--green);
+    }
+
+    .status-rejected {
+      background-color: rgba(218, 54, 51, 0.2);
+      color: var(--red);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar Navigation -->
+  <div class="sidebar">
+    <div class="brand">⚡ ApexTrader</div>
+    <ul class="nav-list">
+      <li class="nav-item">
+        <button class="active" onclick="switchTab(event, 'trading')">📈 XAUUSD Chart</button>
+      </li>
+      <li class="nav-item">
+        <button onclick="switchTab(event, 'deposit')">💳 Deposit Funds</button>
+      </li>
+      <li class="nav-item">
+        <button onclick="switchTab(event, 'admin')">👑 Admin Panel</button>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Main Content Wrapper -->
+  <div class="main-wrapper">
+    <div class="topbar">
+      <div>Asset: <strong>XAU/USD (Gold)</strong></div>
+      <div style="display: flex; gap: 20px; align-items: center;">
+        <div class="balance-badge">Balance: <span id="userBalance">0.00</span> USDT</div>
+      </div>
+    </div>
+
+    <div class="content-area">
+
+      <!-- 1. TRADING CHART VIEW -->
+      <div id="trading" class="view-panel active">
+        <div class="card">
+          <div class="card-title" style="display: flex; justify-content: space-between;">
+            <span>XAU/USD Real-Time Price Simulation</span>
+            <span id="livePrice" style="color: var(--green);">$2,645.50</span>
+          </div>
+          <div class="chart-container" id="chart">
+            <div class="candle" style="height: 40%;"></div>
+            <div class="candle red" style="height: 55%;"></div>
+            <div class="candle" style="height: 70%;"></div>
+            <div class="candle" style="height: 65%;"></div>
+            <div class="candle red" style="height: 30%;"></div>
+            <div class="candle" style="height: 85%;"></div>
+            <div class="candle" style="height: 90%;"></div>
+          </div>
+          <div style="display: flex; gap: 15px; margin-top: 20px;">
+            <button class="btn btn-success" style="flex: 1;">BUY / LONG</button>
+            <button class="btn btn-danger" style="flex: 1;">SELL / SHORT</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. DEPOSIT VIEW -->
+      <div id="deposit" class="view-panel">
+        <div class="card deposit-box">
+          <div class="card-title">Deposit USDT (TRC-20)</div>
+          
+          <div class="form-group">
+            <label for="depositAmount">Enter Deposit Amount (USDT)</label>
+            <input type="number" id="depositAmount" placeholder="e.g. 500" min="10">
+          </div>
+
+          <button class="btn btn-gold" style="width: 100%;" onclick="generateDeposit()">Continue to Deposit</button>
+
+          <!-- Dynamic Payment Section -->
+          <div id="paymentSection" class="payment-details">
+            <p style="font-size: 0.9rem; color: var(--text-muted); text-align: center;">Scan QR Code or send directly to the address below:</p>
+            
+            <!-- QR Code Container -->
+            <div class="qr-container">
+              <img id="qrCodeImage" src="" alt="USDT TRC20 Address QR Code">
+            </div>
+
+            <div class="address-box">
+              <input type="text" id="trcAddress" class="address-input" value="TGVubuR4VPTsNrimF5xnx1826hyoKKApvu" readonly>
+              <button class="btn btn-gold" onclick="copyAddress()">Copy</button>
+            </div>
+
+            <button class="btn btn-success" style="width: 100%; margin-top: 15px;" onclick="submitPayment()">I've Made Payment</button>
+          </div>
+        </div>
+
+        <!-- User Deposit History -->
+        <div class="card">
+          <div class="card-title">Deposit History</div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Transaction ID</th>
+                  <th>Amount</th>
+                  <th>Network</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="userTxHistory">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. ADMIN PANEL VIEW -->
+      <div id="admin" class="view-panel">
+        <div class="card">
+          <div class="card-title">Admin Management - Pending Deposits</div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tx ID</th>
+                  <th>Amount (USDT)</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminTxList">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const MASTER_TRC20_ADDRESS = "TGVubuR4VPTsNrimF5xnx1826hyoKKApvu";
+
+    let balance = 0.00;
+    let transactions = [];
+    let currentDepositAmount = 0;
+
+    function switchTab(e, tabId) {
+      document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
+      document.querySelectorAll('.nav-item button').forEach(btn => btn.classList.remove('active'));
+
+      document.getElementById(tabId).classList.add('active');
+      e.currentTarget.classList.add('active');
+    }
+
+    function generateDeposit() {
+      const amount = parseFloat(document.getElementById('depositAmount').value);
+      if (!amount || amount <= 0) {
+        alert('Please enter a valid deposit amount.');
+        return;
+      }
+      currentDepositAmount = amount;
+      document.getElementById('trcAddress').value = MASTER_TRC20_ADDRESS;
+      
+      // Generate dynamic QR code using API
+      const qrImg = document.getElementById('qrCodeImage');
+      qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${MASTER_TRC20_ADDRESS}`;
+      
+      document.getElementById('paymentSection').style.display = 'block';
+    }
+
+    function copyAddress() {
+      const addressInput = document.getElementById('trcAddress');
+      addressInput.select();
+      navigator.clipboard.writeText(addressInput.value);
+      alert('USDT TRC20 Address copied to clipboard!');
+    }
+
+    function submitPayment() {
+      const txId = 'TXN-' + Math.floor(100000 + Math.random() * 900000);
+      
+      const newTx = {
+        id: txId,
+        amount: currentDepositAmount,
+        status: 'Pending'
+      };
+
+      transactions.push(newTx);
+      
+      document.getElementById('paymentSection').style.display = 'none';
+      document.getElementById('depositAmount').value = '';
+
+      alert('Payment submitted! Status is pending admin approval.');
+      renderTables();
+    }
+
+    function renderTables() {
+      const userBody = document.getElementById('userTxHistory');
+      const adminBody = document.getElementById('adminTxList');
+
+      userBody.innerHTML = '';
+      adminBody.innerHTML = '';
+
+      transactions.forEach(tx => {
+        const userRow = `
+          <tr>
+            <td>${tx.id}</td>
+            <td>${tx.amount.toFixed(2)} USDT</td>
+            <td>TRC20</td>
+            <td><span class="status-badge status-${tx.status.toLowerCase()}">${tx.status}</span></td>
+          </tr>
+        `;
+        userBody.innerHTML += userRow;
+
+        const adminRow = `
+          <tr>
+            <td>${tx.id}</td>
+            <td>${tx.amount.toFixed(2)} USDT</td>
+            <td><span class="status-badge status-${tx.status.toLowerCase()}">${tx.status}</span></td>
+            <td>
+              ${tx.status === 'Pending' ? `
+                <button class="btn btn-success" style="padding: 6px 12px; font-size: 0.8rem;" onclick="approveTx('${tx.id}')">Approve</button>
+                <button class="btn btn-danger" style="padding: 6px 12px; font-size: 0.8rem;" onclick="rejectTx('${tx.id}')">Reject</button>
+              ` : 'No actions'}
+            </td>
+          </tr>
+        `;
+        adminBody.innerHTML += adminRow;
+      });
+
+      document.getElementById('userBalance').innerText = balance.toFixed(2);
+    }
+
+    function approveTx(txId) {
+      const tx = transactions.find(t => t.id === txId);
+      if (tx && tx.status === 'Pending') {
+        tx.status = 'Approved';
+        balance += tx.amount;
+        renderTables();
+        alert(`Transaction ${txId} approved. Balance updated!`);
+      }
+    }
+
+    function rejectTx(txId) {
+      const tx = transactions.find(t => t.id === txId);
+      if (tx && tx.status === 'Pending') {
+        tx.status = 'Rejected';
+        renderTables();
+        alert(`Transaction ${txId} rejected.`);
+      }
+    }
+
+    setInterval(() => {
+      const priceElem = document.getElementById('livePrice');
+      const basePrice = 2645.50;
+      const variation = (Math.random() - 0.5) * 4;
+      const newPrice = (basePrice + variation).toFixed(2);
+      
+      priceElem.innerText = `$${newPrice}`;
+      priceElem.style.color = variation >= 0 ? 'var(--green)' : 'var(--red)';
+    }, 2000);
+  </script>
+</body>
+</html>
